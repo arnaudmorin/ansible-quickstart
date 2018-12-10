@@ -1,0 +1,347 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+        <title>Ansible Quickstart</title>
+
+        <link rel="stylesheet" href="css/reveal.css">
+        <link rel="stylesheet" href="css/theme/solarized.css">
+
+        <!-- Theme used for syntax highlighting of code -->
+        <link rel="stylesheet" href="lib/css/zenburn.css">
+
+        <!-- Printing and PDF exports -->
+        <script>
+            var link = document.createElement( 'link' );
+            link.rel = 'stylesheet';
+            link.type = 'text/css';
+            link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+            document.getElementsByTagName( 'head' )[0].appendChild( link );
+        </script>
+    </head>
+    <body>
+        <div class="reveal">
+            <div class="slides">
+                <section data-markdown data-background="data/ovh-meet-up-brest-digit-event.jpg">
+                    # Ansible
+                    #### deploy deploy deploy
+                </section>
+                <section>
+                    <section data-markdown>
+                        ## Ansible is Powerful
+                        * orchestration
+                        * deployment
+                        * configuration
+                    </section>
+                    <section data-markdown>
+                        ## Vocabulary
+                        * Host inventory
+                        * Modules
+                        * Playbooks
+                        * Roles
+                    </section>
+                    <section data-markdown>
+                        ## Main config file
+                        * /etc/ansible/hosts
+                        * /etc/ansible/ansible.cfg
+                    </section>
+                </section>
+                <section>
+                    <section data-markdown>
+                        # Ansible inventory
+                    </section>
+                    <section data-markdown>
+                        ## From simple host inventory...
+                        ```
+                        $ cat /etc/ansible/hosts
+                        neutron # we can use names
+                        glance
+                        192.168.1.81 # but also ip addresses
+                        ```
+                    </section>
+                    <section data-markdown>
+                        ## ... to complex dynamic inventories
+                        * pulling inventory dynamically from cloud (such as OpenStack)
+                        * more info https://docs.ansible.com/ansible/2.5/user_guide/intro_dynamic_inventory.html#explicit-use-of-inventory-script
+                    </section>
+                </section>
+                <section>
+                    <section data-markdown>
+                        # Ansible command line tools
+                    </section>
+                    <section data-markdown>
+                        ## Main commands
+
+                        * ansible
+                        * ansible-config
+                        * ansible-console
+                        * ansible-doc
+                        * ansible-galaxy
+                        * ansible-inventory
+                        * ansible-playbook
+                        * ansible-pull
+                        * ansible-vault
+                    </section>
+                    <section data-markdown>
+                        ## First ad hoc command
+
+                        ```
+                        $ ansible all -m ping
+192.168.1.81 | SUCCESS => {
+    "changed": false, 
+    "ping": "pong"
+}
+glance | SUCCESS => {
+    "changed": false, 
+    "ping": "pong"
+}
+neutron | SUCCESS => {
+    "changed": false, 
+    "ping": "pong"
+}
+                        ```
+                    </section>
+                    <section data-markdown>
+                        ## You can also execute module only on one node ...
+                        ```
+                        $ ansible 192.168.1.81 -m ping
+                        192.168.1.81 | SUCCESS => {
+                            "changed": false, 
+                            "ping": "pong"
+                        }
+
+                        ```
+                    </section>
+                    <section data-markdown>
+                        ## ... or execute shell command on all nodes
+                        ```
+                        $ ansible all -a "/bin/echo hello"
+                        192.168.1.81 | CHANGED | rc=0 >>
+                        hello
+
+                        neutron | CHANGED | rc=0 >>
+                        hello
+
+                        glance | CHANGED | rc=0 >>
+                        hello
+
+                        ```
+                    </section>
+                    <section data-markdown>
+                        ## ansible-console
+                        run interactive ah hoc commands against a choosen inventory
+
+                        ```
+                        $ ansible-console all
+                        Welcome to the ansible console.
+                        Type help or ? to list commands.
+
+                        root@all (3)[f:5]$ uname -r
+                        neutron | CHANGED | rc=0 >>
+                        4.4.0-138-generic
+
+                        glance | CHANGED | rc=0 >>
+                        4.4.0-138-generic
+
+                        192.168.1.81 | CHANGED | rc=0 >>
+                        4.4.0-138-generic
+
+                        root@all (3)[f:5]$ 
+
+                        ```
+                    </section>
+                    <section data-markdown>
+                        ## ansible-galaxy
+
+                        Search/download role from ansible galaxy (like a store)
+
+                        ```
+                        $ ansible-galaxy search asterisk
+                        ...
+                        ```
+                        ```
+                        $ ansible-galaxy install dgnest.asterisk
+                        - downloading role 'asterisk', owned by dgnest
+                        - downloading role from https://github.com/dgnest/ansible-role-asterisk/archive/0.0.5.tar.gz
+                        - extracting dgnest.asterisk to /root/.ansible/roles/dgnest.asterisk
+                        - dgnest.asterisk (0.0.5) was installed successfully
+
+                        ```
+                    </section>
+                    <section data-markdown>
+                        ## ansible-inventory
+
+                        used to display or dump the configured inventory as Ansible sees it
+
+                        ```
+                        $ ansible-inventory --yaml --list
+all:
+  children:
+    ungrouped:
+      hosts:
+        192.168.1.81: {}
+        glance: {}
+        neutron: {}
+                        ```
+                    </section>
+                    <section data-markdown>
+                        ## ansible-playbook
+
+                        the tool to run Ansible playbooks, which are a configuration and multinode deployment system
+
+                        ```
+                        $ ansible-playbook play.yml --list-tasks
+
+playbook: play.yml
+
+  play #1 (all): all    TAGS: []
+    tasks:
+      install cowsay and steam locomotive    TAGS: []
+                        ```
+                    </section>
+                    <section data-markdown>
+                        ## ansible-pull
+                        pulls playbooks from a VCS repo and executes them for the local host
+                    </section>
+                    <section data-markdown>
+                        ## ansible-vault
+                        encryption/decryption utility for Ansible data files
+                    </section>
+                </section>
+
+                <section>
+                    <section data-markdown>
+                        # Focus on playbooks
+                    </section>
+                    <section data-markdown>
+                        ## Playbooks
+                        * YAML files
+                        * Composed of one or more **plays**
+                        * plays are composed of **roles**
+                        * roles are composed of **tasks**
+                        * a task is a call to a module (like with ad hoc commands)
+                    </section>
+                    <section data-markdown>
+                        ## Playbooks
+                        * Applied to a group af node
+                        * Allow orchestration between nodes
+                    </section>
+                    <section data-markdown>
+                        ## Example
+                        ```
+---
+- hosts: localhost                 # Apply only to localhost
+  tasks:
+  - name: install cowsay and sl    # Use apt module
+    apt:
+      name: ['cowsay', 'sl']       # Ensure that those packages
+      state: latest                # are installed
+
+                        ```
+                    </section>
+                    <section data-markdown>
+                        ## ansible-playbook play.yml
+                        ![playbook-cowsay](data/playbook-cowsay.gif)
+                    </section>
+                    <section data-markdown>
+                        ## Ansible roles
+                        Roles are ways of automatically do tasks that are related (such as installing and configuring a software)
+
+                        They are also nice for:
+                        * sharing with other (or use others roles - see ansible-galaxy)
+                        * reuse (you can use same roles in multiples plays)
+                    </section>
+                    <section data-markdown>
+                        ## Example
+                        ```
+$ cat /etc/ansible/playbooks/play.yml
+---
+- hosts: localhost
+  roles:
+  - useless
+                        ```
+                        ```
+$ cat /etc/ansible/roles/useless/tasks/main.yml 
+---
+- name: install cowsay and steam locomotive
+  apt:
+    name: ['cowsay', 'sl']
+    state: latest
+                        ```
+                    </section>
+                </section>
+
+                <section>
+                    <section data-markdown>
+                        # Variables
+                    </section>
+                    <section data-markdown>
+                        ## Definition
+                        Variables can be defined in
+                        * inventory
+                        * playbooks
+                        * roles
+                        * on CLI
+                        * retrieved from facts
+                    </section>
+                    <section data-markdown>
+                        ## Defining a variable
+
+                        ```
+                        foo:
+                          field1: one
+                            field2: two
+                        ```
+
+                        Accessing such variable:
+                        ```
+                        foo['field1']
+                        foo.field1
+                        ```
+                    </section>
+                    <section data-markdown>
+                        ## Example in a playbook
+                        ```
+                        - hosts: webservers
+                          vars:
+                              http_port: 80
+                        ```
+                    </section>
+                    <section data-markdown>
+                        ## Access
+                        ```
+                        - hosts: webservers
+                          vars:
+                              http_port: 80
+                        ```
+                    </section>
+                </section>
+
+                <section data-markdown data-background="data/camion_plot.gif">
+                    ## Conclusion / Questions ?
+                </section>
+            </div>
+        </div>
+
+        <script src="lib/js/head.min.js"></script>
+        <script src="js/reveal.js"></script>
+
+        <script>
+            // More info https://github.com/hakimel/reveal.js#configuration
+            Reveal.initialize({
+                history: true,
+                slideNumber: true,
+
+                // More info https://github.com/hakimel/reveal.js#dependencies
+                dependencies: [
+                    { src: 'plugin/markdown/marked.js' },
+                    { src: 'plugin/markdown/markdown.js' },
+                    { src: 'plugin/notes/notes.js', async: true },
+                    { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+                ]
+            });
+        </script>
+    </body>
+</html>
